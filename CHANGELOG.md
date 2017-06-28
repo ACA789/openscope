@@ -35,7 +35,7 @@
 - Improve VNAV climbs and descents to better comply with restrictions [#32](https://github.com/openscope/openscope/issues/32)
 - Updates Boston Logan Intl. (KBOS) - Updated procedures, added video map and terrain, modified airspace, realistic traffic [#228](https://github.com/openscope/openscope/issues/228)
 - Removes left over references to `AircraftStripView` in `AircraftModel` [#535](https://github.com/openscope/openscope/issues/535)
-
+- Adds Hartsfield–Jackson Atlanta Intl. (KATL) - Includes video map, terrain and realistic traffic [#541](https://github.com/openscope/openscope/issues/541)
 
 
 
