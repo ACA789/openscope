@@ -1,7 +1,7 @@
 ## 5.3.0 (August 1, 2017)
 ---
 ### Features
-
+- Adds Louisville Intl. (KSDF) - Includes video map, terrain and realistic traffic with the addition of Trans States Airlines [#557](https://github.com/openscope/openscope/issues/557)
 
 
 
