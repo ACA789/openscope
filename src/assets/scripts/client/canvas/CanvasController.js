@@ -622,17 +622,19 @@ export default class CanvasController {
         cc.lineJoin = 'round';
         cc.font = BASE_CANVAS_FONT;
 
-        _forEach(this._navigationLibrary.realFixes, (fix, i) => {
+        // for (const fix in this._navigationLibrary.realFixes) {
+        const fixes = this._navigationLibrary.realFixes;
+        for (let i = 0; i < fixes.length; i++) {
             cc.save();
             cc.translate(
-                round(UiController.km_to_px(fix.relativePosition[0])) + this.canvas.panX,
-                -round(UiController.km_to_px(fix.relativePosition[1])) + this.canvas.panY
+                round(UiController.km_to_px(fixes[i].relativePosition[0])) + this.canvas.panX,
+                -round(UiController.km_to_px(fixes[i].relativePosition[1])) + this.canvas.panY
             );
 
-            this.canvas_draw_fix(cc, fix.name);
+            this.canvas_draw_fix(cc, fixes[i].name);
 
             cc.restore();
-        });
+        }
     }
 
     // TODO: break this method up into smaller chunks
@@ -840,16 +842,14 @@ export default class CanvasController {
         // TODO: if all these parens are actally needed, abstract this out to a function that can return a bool.
         // Aircraft
         // Draw the future path
-        if ((GameController.game.option.get('drawProjectedPaths') === 'always') ||
-          ((GameController.game.option.get('drawProjectedPaths') === 'selected') &&
+        if ((GameController.game.option.getOptionByName('drawProjectedPaths') === 'always') ||
+          ((GameController.game.option.getOptionByName('drawProjectedPaths') === 'selected') &&
            ((aircraft.warning || match) && !aircraft.isTaxiing()))
         ) {
             this.canvas_draw_future_track(cc, aircraft);
         }
 
         const alerts = aircraft.hasAlerts();
-
-        cc.strokeStyle = cc.fillStyle;
 
         cc.translate(
             UiController.km_to_px(aircraft.relativePosition[0]) + this.canvas.panX,
@@ -870,6 +870,7 @@ export default class CanvasController {
         }
 
         // Draw the radar target (aka aircraft position dot)
+        cc.fillStyle = this.theme.RADAR_TARGET.RADAR_TARGET;
         cc.beginPath();
         cc.arc(0, 0, UiController.km_to_px(radarTargetRadiusKm), 0, tau());
         cc.fill();
@@ -1031,10 +1032,6 @@ export default class CanvasController {
      */
     canvas_draw_all_aircraft(cc) {
         for (let i = 0; i < prop.aircraft.list.length; i++) {
-            // color of position dot
-            cc.fillStyle = this.theme.RADAR_TARGET.RADAR_TARGET;
-            cc.lineWidth = 2;
-
             cc.save();
             this.canvas_draw_aircraft(cc, prop.aircraft.list[i]);
             cc.restore();
@@ -1121,16 +1118,7 @@ export default class CanvasController {
             datablockDir = this.theme.DATA_BLOCK.LEADER_DIRECTION;
         }
 
-        const leaderLength = this.theme.DATA_BLOCK.LEADER_LENGTH *
-            this.theme.DATA_BLOCK.LEADER_LENGTH_INCREMENT_PIXELS +
-            this.theme.DATA_BLOCK.LEADER_LENGTH_ADJUSTMENT_PIXELS -
-            this.theme.DATA_BLOCK.LEADER_PADDING_FROM_BLOCK_PX -
-            this.theme.DATA_BLOCK.LEADER_PADDING_FROM_TARGET_PX;
-
-        // const targetToLeaderEndOffset = [
-        //     Math.sin(datablockDir) * (leaderLength - ),
-        //     -Math.cos(datablockDir) * leaderLength
-        // ];
+        const leaderLength = this._calculateLeaderLength();
 
         // Draw leader line
         let offsetComponent = [
@@ -1149,10 +1137,6 @@ export default class CanvasController {
             ac_pos[0] + (offsetComponent[0] * targetPadding),
             ac_pos[1] + (offsetComponent[1] * targetPadding)
         ];
-        // let leaderOffset = [
-        //     Math.sin(leaderAngleRadians) * leaderLength,
-        //     -Math.cos(leaderAngleRadians) * leaderLength
-        // ];
         const leaderEnd = [
             ac_pos[0] + offsetComponent[0] * (leaderLength - blockPadding),
             ac_pos[1] + offsetComponent[1] * (leaderLength - blockPadding)
@@ -1849,6 +1833,21 @@ export default class CanvasController {
     }
 
     /**
+     * Calculate the length of the leader line connecting the target to the data block
+     *
+     * @for CanvasController
+     * @method _calculateLeaderLength
+     * @return {number} length, in pixels
+     */
+    _calculateLeaderLength() {
+        return this.theme.DATA_BLOCK.LEADER_LENGTH *
+            this.theme.DATA_BLOCK.LEADER_LENGTH_INCREMENT_PIXELS +
+            this.theme.DATA_BLOCK.LEADER_LENGTH_ADJUSTMENT_PIXELS -
+            this.theme.DATA_BLOCK.LEADER_PADDING_FROM_BLOCK_PX -
+            this.theme.DATA_BLOCK.LEADER_PADDING_FROM_TARGET_PX;
+    }
+
+    /**
      * Center a point in the view
      *
      * Used only for centering aircraft, this accepts
@@ -1880,6 +1879,8 @@ export default class CanvasController {
      */
     _setTheme = (themeName) => {
         if (!_has(THEME, themeName)) {
+            console.error(`Expected valid theme to change to, but received '${themeName}'`);
+
             return;
         }
 
